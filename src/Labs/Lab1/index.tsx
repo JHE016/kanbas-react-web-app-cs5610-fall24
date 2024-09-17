@@ -69,6 +69,23 @@ export default function Lab1() {
                     <li>Let the cake cool for 10 minutes.</li>
                     <li>Enjoy the classci vanilla cake!</li>
                 </ol>
+                <h5>Unordered List Tag</h5>
+                My favorite books (in no particular order)
+                <ul id="wd-my-books">
+                    <li>Dune</li>
+                    <li>Lord of the Rings</li>
+                    <li>Ender's Game</li>
+                    <li>Red Mars</li>
+                    <li>The Forever War</li>
+                </ul>
+                Your favorite books (in no particular order)
+                <ul id="wd-your-books">
+                    <li>Game of Thrones</li>
+                    <li>Little Women</li>
+                    <li>Pride and Prejudice</li>
+                    <li>War and Peace</li>
+                    <li>Jane Eyre</li>
+                </ul>    
             </div>
             <div id="wd-tables">
                 <h4>Table Tag</h4>
@@ -266,11 +283,11 @@ export default function Lab1() {
                     <input type="range" id="wd-text-fields-rating"
                         placeholder="Doe"
                         max="5"
-                        value="4" /><br />
+                        defaultValue="4" /><br />
                     <label htmlFor="wd-text-fields-dob"> Date of birth: </label>
                     <input type="date"
                         id="wd-text-fields-dob"
-                        value="2000-01-21" /><br />
+                        defaultValue="2000-01-21" /><br />
                 </form>
             </div>
 
