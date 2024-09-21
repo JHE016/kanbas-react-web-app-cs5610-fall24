@@ -4,7 +4,10 @@ export default function Modules() {
             {/* Implement Collapse All button, View Progress button, etc. */}
             <button>Collapse All</button>
             <button>View Progress</button>
-            <button>Publish All</button>
+            <select>
+                <option>Publish All</option>
+                <option>Publish</option>
+            </select>
             <button>+ Module</button>
             <ul id="wd-modules">
                 <li className="wd-module">
