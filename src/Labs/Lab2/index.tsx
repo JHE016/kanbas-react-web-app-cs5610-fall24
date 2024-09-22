@@ -11,6 +11,7 @@ import Zindex from "./Zindex";
 import Float from "./Float";
 import GridLayout from "./GridLayout";
 import Flex from "./Flex";
+import BackgroundColors from "./BackgroundColors";
 
 export default function Lab2() {
     return (
@@ -67,6 +68,7 @@ export default function Lab2() {
                 </div>
             </div>
             <ForegroundColors />
+            <BackgroundColors />
             <Border />
             <Padding />
             <Margin />
