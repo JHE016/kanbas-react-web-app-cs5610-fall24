@@ -12,6 +12,7 @@ import Float from "./Float";
 import GridLayout from "./GridLayout";
 import Flex from "./Flex";
 import BackgroundColors from "./BackgroundColors";
+import ReactIcons from "./ReactIcons";
 
 export default function Lab2() {
     return (
@@ -79,6 +80,7 @@ export default function Lab2() {
             <Float />
             <GridLayout />
             <Flex />
+            <ReactIcons />
         </div>
     );
 }
