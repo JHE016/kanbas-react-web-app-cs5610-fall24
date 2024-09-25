@@ -13,13 +13,19 @@ import GridLayout from "./GridLayout";
 import Flex from "./Flex";
 import BackgroundColors from "./BackgroundColors";
 import ReactIcons from "./ReactIcons";
+import BootstrapGrids from "./BootstrapGrids";
+import ScreenSizeLabel from "./ScreenSizeLabel";
+import BootstrapTables from "./BootstrapTables";
+import BootstrapLists from "./BootstrapLists";
+import BootstrapForms from "./BootstrapForms";
+import BootstrapNavigation from "./BootstrapNavigation";
 
 export default function Lab2() {
     return (
-        <div id="wd-lab2">
+        <div id="wd-lab2" className="container">
             <h2>Lab 2 - Cascading Style Sheets</h2>
             <h3>Styling with the STYLE attribute</h3>
-            <p> {/* <p style={{ backgroundColor: "blue", color: "white" }}> */}
+            <p id="wd-id-selector-3"> {/* <p style={{ backgroundColor: "blue", color: "white" }}> */}
                 Style attribute allows configuring look and feel
                 right on the element. Although it's very convenient
                 it is considered bad practice and you should avoid
@@ -81,6 +87,12 @@ export default function Lab2() {
             <GridLayout />
             <Flex />
             <ReactIcons />
+            <BootstrapGrids />
+            <ScreenSizeLabel />
+            <BootstrapTables />
+            <BootstrapLists />
+            <BootstrapForms />
+            <BootstrapNavigation />
         </div>
     );
 }
