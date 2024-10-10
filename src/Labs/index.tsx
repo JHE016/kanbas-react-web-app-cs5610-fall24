@@ -6,7 +6,7 @@ import Lab3 from "./Lab3";
 
 export default function Labs() {
     return (
-        <div>
+        <div className="p-2">
             <h1>Labs</h1>
             <h1>Name: Jinjin He</h1>
             <h1>Section 2</h1>
@@ -17,7 +17,7 @@ export default function Labs() {
                 <Route path="/" element={<Navigate to="Lab1" />} />
                 <Route path="Lab1" element={<Lab1 />} />
                 <Route path="Lab2" element={<Lab2 />} />
-                <Route path="Lab3" element={<Lab3 />} />
+                <Route path="Lab3/*" element={<Lab3 />} />
             </Routes>
         </div>
     );
