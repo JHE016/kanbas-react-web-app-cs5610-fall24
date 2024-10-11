@@ -26,6 +26,8 @@ import { Deserializer } from "v8";
 import Destructing from "./Destructing";
 import FunctionDestructing from "./FunctionDestructing";
 import DestructingImports from "./DestructingImports";
+import Classes from "./Classes";
+import Styles from "./Styles";
 
 export default function Lab3() {
     return (
@@ -58,6 +60,8 @@ export default function Lab3() {
             <Destructing />
             <FunctionDestructing />
             <DestructingImports />
+            <Classes />
+            <Styles />
         </div>
     );
 }
