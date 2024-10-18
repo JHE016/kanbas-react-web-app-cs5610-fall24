@@ -3,42 +3,31 @@ import { Link } from "react-router-dom";
 import { useLocation } from "react-router";
 
 export default function TOC() {
-    const { pathname } = useLocation();
-    return (
-      <ul className="nav nav-pills">
-        <li className="nav-item">
-          <a id="wd-a" href="#/Labs" className="nav-link">
-            Labs
+  const { pathname } = useLocation();
+
+  const navLinks = [
+    { id: "wd-a", href: "#/Labs", label: "Labs" },
+    { id: "wd-a1", href: "#/Labs/Lab1", label: "Lab 1", pathMatch: "Lab1" },
+    { id: "wd-a2", href: "#/Labs/Lab2", label: "Lab 2", pathMatch: "Lab2" },
+    { id: "wd-a3", href: "#/Labs/Lab3", label: "Lab 3", pathMatch: "Lab3" },
+    { id: "wd-a4", href: "#/Labs/Lab4", label: "Lab 4", pathMatch: "Lab4" },
+    { id: "wd-k", href: "#/Kanbas", label: "Kanbas" },
+    { id: "wd-github", href: "https://github.com/JHE016/kanbas-react-web-app-cs5610-fall24/", label: "GitHub" }
+  ];
+
+  return (
+    <ul className="nav nav-pills">
+      {navLinks.map((item) => (
+        <li key={item.id} className="nav-item">
+          <a
+            id={item.id}
+            href={item.href}
+            className={`nav-link ${item.pathMatch && pathname.includes(item.pathMatch) ? "active" : ""}`}
+          >
+            {item.label}
           </a>
         </li>
-        <li className="nav-item">
-          <a id="wd-a1" href="#/Labs/Lab1"
-            className={`nav-link ${pathname.includes("Lab1") ? "active" : ""}`}>
-            Lab 1
-          </a>
-        </li>
-        <li className="nav-item">
-          <a id="wd-a2" href="#/Labs/Lab2"
-            className={`nav-link ${pathname.includes("Lab2") ? "active" : ""}`}>
-            Lab 2
-          </a>
-        </li>
-        <li className="nav-item">
-          <a id="wd-a3" href="#/Labs/Lab3"
-            className={`nav-link ${pathname.includes("Lab3") ? "active" : ""}`}>
-            Lab 3
-          </a>
-        </li>
-        <li className="nav-item">
-        <a id="wd-k" href="#/Kanbas" className="nav-link">
-          Kanbas
-        </a>
-      </li>
-      <li className="nav-item">
-        <a id="wd-k" href="https://github.com/JHE016/kanbas-react-web-app-cs5610-fall24/" className="nav-link">
-          My GitHub
-        </a>
-      </li>
+      ))}
     </ul>
   );
 }
