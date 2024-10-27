@@ -9,6 +9,7 @@ import ParentStateComponent from "./ParentStateComponent";
 import PassingDataOnEvent from "./PassingDataOnEvent";
 import PassingFunctions from "./PassingFunctions";
 import StringStateVariables from "./StringStateVariables";
+import ReduxExamples from "./ReduxExamples";
 
 export default function index() {
   function sayHello() {
@@ -28,6 +29,7 @@ export default function index() {
       <ObjectStateVariable />
       <ArrayStateVariable />
       <ParentStateComponent />
+      <ReduxExamples />
     </div>
   );
 }
