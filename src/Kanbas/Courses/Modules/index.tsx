@@ -13,15 +13,22 @@ export default function Modules() {
     const { cid } = useParams();
     const [moduleName, setModuleName] = useState("");
     const { modules } = useSelector((state: any) => state.modulesReducer);
+    const { currentUser } = useSelector((state: any) => state.accountReducer);
     const dispatch = useDispatch();
+
+    const isFaculty = currentUser.role === "FACULTY";
 
     return (
         <div className="p-3">
-            <ModulesControls moduleName={moduleName} setModuleName={setModuleName}
+            <ModulesControls
+                moduleName={moduleName}
+                setModuleName={setModuleName}
                 addModule={() => {
                     dispatch(addModule({ name: moduleName, course: cid }));
                     setModuleName("");
-                }} /><br /><br />
+                }}
+                isFaculty={isFaculty} // Pass isFaculty as a prop
+            /><br /><br />
             <ul id="wd-modules" className="list-group rounded-0">
                 {modules
                     .filter((module: any) => module.course === cid)
@@ -30,24 +37,30 @@ export default function Modules() {
                             <div className="wd-title p-3 ps-2 bg-secondary">
                                 <BsGripVertical className="me-2 fs-3" />
                                 {!module.editing && module.name}
-                                {module.editing && (
-                                    <input className="form-control w-50 d-inline-block"
-                                        onChange={(e) => dispatch(
-                                            updateModule({ ...module, name: e.target.value })
-                                          )}
+                                {isFaculty && module.editing && (
+                                    <input
+                                        className="form-control w-50 d-inline-block"
+                                        onChange={(e) =>
+                                            dispatch(
+                                                updateModule({ ...module, name: e.target.value })
+                                            )
+                                        }
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
                                                 dispatch(updateModule({ ...module, editing: false }));
                                             }
                                         }}
-                                        defaultValue={module.name} />
+                                        defaultValue={module.name}
+                                    />
                                 )}
                                 <ModuleControlButtons
-                                    moduleId={module._id}
-                                    deleteModule={(moduleId) => {
-                                        dispatch(deleteModule(moduleId));
-                                    }}
-                                    editModule={(moduleId) => dispatch(editModule(moduleId))} />
+                                        moduleId={module._id}
+                                        deleteModule={(moduleId) => {
+                                            dispatch(deleteModule(moduleId));
+                                        }}
+                                        editModule={(moduleId) => dispatch(editModule(moduleId))}
+                                        isFaculty={isFaculty}
+                                />
                             </div>
                             {module.lessons && (
                                 <ul className="wd-lessons list-group rounded-0">

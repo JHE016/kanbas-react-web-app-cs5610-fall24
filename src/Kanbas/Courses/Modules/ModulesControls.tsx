@@ -5,8 +5,8 @@ import "../../style.css";
 import ModuleEditor from "./ModuleEditor";
 
 export default function ModulesControls(
-    { moduleName, setModuleName, addModule }:
-    { moduleName: string; setModuleName: (title: string) => void; addModule: () => void; }
+    { moduleName, setModuleName, addModule, isFaculty }:
+    { moduleName: string; setModuleName: (title: string) => void; addModule: () => void; isFaculty: boolean;}
 ) {
   return (
     <div id="wd-modules-controls" className="d-flex justify-content-end text-nowrap">
@@ -57,13 +57,22 @@ export default function ModulesControls(
       </div>
 
       {/* Add Module button */}
-      <button id="wd-add-module-btn" className="btn btn-lg btn-danger"
-        data-bs-toggle="modal" data-bs-target="#wd-add-module-dialog">
-        <FaPlus className="position-relative me-2" style={{ bottom: "1px" }} />
-        Module
-      </button>
-      <ModuleEditor dialogTitle="Add Module" moduleName={moduleName}
-                    setModuleName={setModuleName} addModule={addModule} />
+      {isFaculty && (
+        <>
+          <button id="wd-add-module-btn" className="btn btn-lg btn-danger"
+            data-bs-toggle="modal" data-bs-target="#wd-add-module-dialog">
+            <FaPlus className="position-relative me-2" style={{ bottom: "1px" }} />
+            Module
+          </button>
+          
+          <ModuleEditor
+            dialogTitle="Add Module"
+            moduleName={moduleName}
+            setModuleName={setModuleName}
+            addModule={addModule}
+          />
+        </>
+      )}
 
     </div>
   );
