@@ -11,6 +11,7 @@ export default function TOC() {
     { id: "wd-a2", href: "#/Labs/Lab2", label: "Lab 2", pathMatch: "Lab2" },
     { id: "wd-a3", href: "#/Labs/Lab3", label: "Lab 3", pathMatch: "Lab3" },
     { id: "wd-a4", href: "#/Labs/Lab4", label: "Lab 4", pathMatch: "Lab4" },
+    { id: "wd-a5", href: "#/Labs/Lab5", label: "Lab 5", pathMatch: "Lab5" },
     { id: "wd-k", href: "#/Kanbas", label: "Kanbas" },
     { id: "wd-github", href: "https://github.com/JHE016/kanbas-react-web-app-cs5610-fall24/", label: "GitHub" }
   ];
