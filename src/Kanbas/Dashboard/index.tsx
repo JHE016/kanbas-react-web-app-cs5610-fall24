@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import * as db from "../Database";
 import { useSelector, useDispatch } from "react-redux";
 import { enrollCourse, unenrollCourse } from "./reducer";
 
 export default function Dashboard(
-    { courses, course, setCourse, addNewCourse,
-        deleteCourse, updateCourse }: {
-            courses: any[]; course: any; setCourse: (course: any) => void;
-            addNewCourse: () => void; deleteCourse: (course: any) => void;
+    { courses, allCourses, course, setCourse, addNewCourse,
+        deleteCourse, updateCourse }: 
+        {
+            courses: any[]; 
+            allCourses: any[];
+            course: any; 
+            setCourse: (course: any) => void;
+            addNewCourse: () => void; 
+            deleteCourse: (course: any) => void;
             updateCourse: () => void;
         }
 ) {
@@ -16,21 +20,9 @@ export default function Dashboard(
     const [showAllCourses, setShowAllCourses] = useState(false);
     const isFaculty = currentUser.role === "FACULTY";
     const isStudent = currentUser.role == "STUDENT";
-    const enrollments = useSelector((state: any) => state.dashboard.enrollments);
     const dispatch = useDispatch();
 
-    // Create a Set of enrolled course IDs for quick lookup
-    const enrolledCourseIds = new Set(
-        enrollments
-            .filter((enrollment: any) => enrollment.user === currentUser._id)
-            .map((enrollment: any) => enrollment.course)
-    );
-
-    const enrolledCourses = currentUser
-        ? courses.filter((course) => enrolledCourseIds.has(course._id))
-        : courses;
-
-    const visibleCourses = showAllCourses ? courses : enrolledCourses;
+    const visibleCourses = showAllCourses ? allCourses : courses;
 
     const handleToggleEnrollments = () => {
         setShowAllCourses(!showAllCourses);
@@ -94,7 +86,7 @@ export default function Dashboard(
             <div id="wd-dashboard-courses" className="row">
                 <div className="row row-cols-1 row-cols-md-5 g-4">
                     {visibleCourses.map((course) => {
-                        const isEnrolled = enrolledCourseIds.has(course._id);
+                        const isEnrolled = courses.some((c) => c._id === course._id);
                         return (
                             <div key={course._id} className="wd-dashboard-course col" style={{ width: "300px" }}>
                                 <div className="card rounded-3 overflow-hidden">
