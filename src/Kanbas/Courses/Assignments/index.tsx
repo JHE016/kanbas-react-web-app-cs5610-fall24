@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BsGripVertical } from "react-icons/bs";
 import AssignmentControl from "./AssignmentControl";
 import ControlButtons from "./ControlButtons";
 import { PiNotePencil } from "react-icons/pi";
 import LessonControlButtons from "../Modules/LessonControlButtons";
 import { useParams } from "react-router";
-import * as db from "../../Database";
 import { useSelector, useDispatch } from "react-redux";
 import AssignmentControlButtons from "./AssignmentControlButtons";
-import { deleteAssignment } from "./reducer";
+import { setAssignment, deleteAssignment } from "./reducer";
+import * as coursesClient from "../client";
+import * as AssignmentClient from "./client";
 
 export default function Assignments() {
     const { cid } = useParams();
@@ -18,6 +19,15 @@ export default function Assignments() {
     const isFaculty = currentUser.role === "FACULTY";
     const [showDialog, setShowDialog] = useState(false);
     const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
+
+    const fetchAssignments = async () => {
+        const assignments = await coursesClient.findAssignmentsForCourse(cid as string);
+        dispatch(setAssignment(assignments));
+    };
+    
+    useEffect(() => {
+        fetchAssignments();
+    }, []);
 
     const formatDateTime = (dateTimeString: any) => {
         // Check if the date is already in the correct format (e.g., "July 6 at 12:00am")
@@ -35,8 +45,9 @@ export default function Assignments() {
         setShowDialog(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (selectedAssignmentId) {
+            await AssignmentClient.deleteAssignment(selectedAssignmentId);
             dispatch(deleteAssignment(selectedAssignmentId));
             setShowDialog(false);
             setSelectedAssignmentId(null);
@@ -60,7 +71,6 @@ export default function Assignments() {
             </div>
             <ul id="wd-assignment-list" className="list-group rounded-0">
                 {assignments
-                    .filter((assignment: any) => assignment.course === cid)
                     .map((assignment: any) => (
                         <li key={assignment._id} className="wd-assignment-list-item list-group-item p-3 ps-1 d-flex justify-content-between align-items-start">
                             <div className="d-flex align-items-start">

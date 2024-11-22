@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useParams, useNavigate } from "react-router";
-import * as db from "../../Database";
-import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { addAssignment, updateAssignment } from "./reducer";
+import * as AssignmentClient from "./client";
+import * as coursesClient from "../client";
 
 export default function AssignmentEditor() {
     const { cid, aid } = useParams();
@@ -17,31 +17,30 @@ export default function AssignmentEditor() {
 
     const [title, setTitle] = useState(assignment?.title || "New Assignment");
     const [description, setDescription] = useState(assignment?.description || "New Assignment Description");
-    const [score, setScore] = useState(assignment?.score || 100);
+    const [score, setScore] = useState(assignment?.score?.replace(" pts", "") || 100);
     const [dueDate, setDueDate] = useState(assignment?.due || "");
     const [availableFromDate, setAvailableFromDate] = useState(assignment?.notAvailableUntil || "");
     const [availableUntilDate, setAvailableUntilDate] = useState(assignment?.availableUntil || "");
     const [modules, setModules] = useState(assignment?.modules || "Multiple Modules");
 
     const formatDate = (date: string | number | Date) => {
-        if (!date) return ""; // If the date is null, undefined, or empty, return an empty string
+        if (!date) return ""; // Handle null or empty dates
         const parsedDate = new Date(date);
-        return isNaN(parsedDate.getTime()) ? "" : parsedDate.toISOString().split('T')[0]; // Check if it's a valid date
+        if (isNaN(parsedDate.getTime())) return ""; // Invalid date
+        return parsedDate.toISOString().slice(0, 16); // Format as yyyy-MM-ddThh:mm
     };
-
-    const formattedScore = score.toString().includes("pts") ? score : `${score} pts`;
 
     if (!isFaculty) {
         return null;
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
 
         const newAssignment = {
             _id: aid,
             title,
             description,
-            score: formattedScore,
+            score: `${score} pts`,
             modules,
             due: dueDate,
             notAvailableUntil: availableFromDate,
@@ -50,11 +49,15 @@ export default function AssignmentEditor() {
         };
 
         if (assignment) {
-            dispatch(updateAssignment(newAssignment));
+            // Update existing assignment
+            await AssignmentClient.updateAssignment(newAssignment);
+            console.log("Assignment updated successfully.");
         } else {
-            dispatch(addAssignment(newAssignment));
+            // Create a new assignment
+            const createdAssignment = await coursesClient.createAssignmentForCourse(cid, newAssignment);
+            console.log("Assignment created successfully:", createdAssignment);
         }
-
+    
         navigate(`/Kanbas/Courses/${cid}/Assignments`);
     };
 
