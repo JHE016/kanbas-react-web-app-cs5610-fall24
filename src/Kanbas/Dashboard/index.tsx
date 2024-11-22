@@ -1,49 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import * as db from "../Database";
-import { useSelector, useDispatch } from "react-redux";
-import { enrollCourse, unenrollCourse } from "./reducer";
+import { useSelector } from "react-redux";
 
 export default function Dashboard(
-    { courses, course, setCourse, addNewCourse,
-        deleteCourse, updateCourse }: {
-            courses: any[]; course: any; setCourse: (course: any) => void;
-            addNewCourse: () => void; deleteCourse: (course: any) => void;
+    { courses, allCourses, course, setCourse, addNewCourse,
+        deleteCourse, updateCourse, handleEnrollToggle }:
+        {
+            courses: any[];
+            allCourses: any[];
+            course: any;
+            setCourse: (course: any) => void;
+            addNewCourse: () => void;
+            deleteCourse: (course: any) => void;
             updateCourse: () => void;
+            handleEnrollToggle: (courseId: string, isEnrolled: boolean) => Promise<void>;
         }
 ) {
     const { currentUser } = useSelector((state: any) => state.accountReducer);
     const [showAllCourses, setShowAllCourses] = useState(false);
     const isFaculty = currentUser.role === "FACULTY";
     const isStudent = currentUser.role == "STUDENT";
-    const enrollments = useSelector((state: any) => state.dashboard.enrollments);
-    const dispatch = useDispatch();
-
-    // Create a Set of enrolled course IDs for quick lookup
-    const enrolledCourseIds = new Set(
-        enrollments
-            .filter((enrollment: any) => enrollment.user === currentUser._id)
-            .map((enrollment: any) => enrollment.course)
-    );
-
-    const enrolledCourses = currentUser
-        ? courses.filter((course) => enrolledCourseIds.has(course._id))
-        : courses;
-
-    const visibleCourses = showAllCourses ? courses : enrolledCourses;
 
     const handleToggleEnrollments = () => {
         setShowAllCourses(!showAllCourses);
     };
 
-    // Handle enrollment status change
-    const handleEnrollToggle = (courseId: any, isEnrolled: any) => {
-        if (isEnrolled) {
-            dispatch(unenrollCourse({ userId: currentUser._id, courseId }));
-        } else {
-            dispatch(enrollCourse({ userId: currentUser._id, courseId }));
-        }
-    };
+    const visibleCourses = showAllCourses ? allCourses : courses;
 
     return (
         <div id="wd-dashboard">
@@ -94,12 +76,13 @@ export default function Dashboard(
             <div id="wd-dashboard-courses" className="row">
                 <div className="row row-cols-1 row-cols-md-5 g-4">
                     {visibleCourses.map((course) => {
-                        const isEnrolled = enrolledCourseIds.has(course._id);
+                        const isEnrolled = courses.some((c) => c._id === course._id);
                         return (
                             <div key={course._id} className="wd-dashboard-course col" style={{ width: "300px" }}>
                                 <div className="card rounded-3 overflow-hidden">
                                     <Link to={`/Kanbas/Courses/${course._id}/Home`}
-                                        className="wd-dashboard-course-link text-decoration-none text-dark" >
+                                        className="wd-dashboard-course-link text-decoration-none text-dark" 
+                                        onClick={() => console.log(`Navigating to course: ${course._id}`)}>
                                         <img src={course.image} width="100%" height={160} />
                                         <div className="card-body">
                                             <h5 className="wd-dashboard-course-title card-title">
@@ -117,7 +100,7 @@ export default function Dashboard(
                                                 >
                                                     {isEnrolled ? "Unenroll" : "Enroll"}
                                                 </button>
-                                            )} 
+                                            )}
                                             {isFaculty && (
                                                 <>
                                                     <button onClick={(event) => {

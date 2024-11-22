@@ -9,13 +9,12 @@ export default function KanbasNavigation() {
     // const isActive = (path: string): boolean => location.pathname.startsWith(path);
     const { pathname } = useLocation();
     const links = [
-        { label: "Dashboard", path: "/Kanbas/Dashboard", icon: AiOutlineDashboard },
-        { label: "Courses", path: "/Kanbas/Dashboard", icon: LiaBookSolid },
-        { label: "Calendar", path: "/Kanbas/Calendar", icon: IoCalendarOutline },
-        { label: "Inbox", path: "/Kanbas/Inbox", icon: FaInbox },
-        { label: "Labs", path: "/Labs", icon: LiaCogSolid },
+        { label: "Dashboard", path: "/Kanbas/Dashboard", key: "dashboard", icon: AiOutlineDashboard },
+        { label: "Courses", path: "/Kanbas/Dashboard", key: "courses", icon: LiaBookSolid }, // Different key
+        { label: "Calendar", path: "/Kanbas/Calendar", key: "calendar", icon: IoCalendarOutline },
+        { label: "Inbox", path: "/Kanbas/Inbox", key: "inbox", icon: FaInbox },
+        { label: "Labs", path: "/Labs", key: "labs", icon: LiaCogSolid },
     ];
-
 
     return (
         <div id="wd-kanbas-navigation" style={{ width: 110 }}

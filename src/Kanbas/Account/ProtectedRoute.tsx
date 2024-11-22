@@ -1,10 +1,17 @@
 import { useSelector } from "react-redux";
 import { Navigate, useParams } from "react-router-dom";
 
-export default function ProtectedRoute({ children }: { children: any }) {
-  const { currentUser } = useSelector((state: any) => state.accountReducer);
-  const enrollments = useSelector((state: any) => state.dashboard.enrollments);
-  const { cid } = useParams<{ cid: string }>();
+export default function ProtectedRoute({ children, isDataReady }: { children: any; isDataReady: boolean }) {
+  const { currentUser } = useSelector((state: any) => state.accountReducer || {});
+  const enrollments = useSelector((state: any) => state.dashboard.enrollments || []);
+  const { cid } = useParams<{ cid: any }>();
+
+//   console.log("ProtectedRoute - Current URL:", window.location.href);
+//   console.log("ProtectedRoute - Current cid:", cid);
+
+  if (!isDataReady) {
+    return <div>Loading...</div>; // Wait for data to load
+  }
 
   if (!currentUser) {
     // Redirect to Sign-in if user is not signed in
