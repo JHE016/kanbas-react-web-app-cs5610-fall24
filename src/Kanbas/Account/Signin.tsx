@@ -9,12 +9,23 @@ export default function Signin() {
   const [credentials, setCredentials] = useState<any>({});
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const signin = async () => {
-    const user = await client.signin(credentials);
-    if (!user) return;
-    dispatch(setCurrentUser(user));
-    navigate("/Kanbas/Dashboard");
-  };
+
+const signin = async () => {
+    try {
+        console.log("Payload being sent to server:", credentials); // Debug
+        const user = await client.signin(credentials);
+        if (!user) {
+            console.error("No user returned from server");
+            return;
+        }
+        dispatch(setCurrentUser(user));
+        navigate("/Kanbas/Dashboard");
+    } catch (error: any) {
+        console.error("Signin failed:", error.response?.data?.message || error.message);
+        alert("Signin failed: " + (error.response?.data?.message || "Please try again"));
+    }
+};
+
 
   return (
     <div id="wd-signin-screen" className="row container">

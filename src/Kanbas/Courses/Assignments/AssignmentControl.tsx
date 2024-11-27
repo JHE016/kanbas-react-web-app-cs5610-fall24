@@ -10,6 +10,12 @@ export default function AssignmentControl({ isFaculty }: { isFaculty: boolean })
     const assignments = useSelector((state: any) => state.assignments.assignments);
 
     const getNextAssignmentId = () => {
+
+        // Ensure assignments and cid are defined
+        if (!assignments || !Array.isArray(assignments) || assignments.length === 0) {
+            return 'A101'; // Default to first assignment ID if no assignments exist
+        }
+
         const courseAssignments = assignments
             .filter((assignment: any) => assignment.course === cid) // Filter by current course ID
             .map((assignment: any) => assignment._id)
