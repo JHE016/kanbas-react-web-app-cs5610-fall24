@@ -26,27 +26,22 @@ const dashboardSlice = createSlice({
             state.enrollments = action.payload;
         },
         enrollCourse: (state, action) => {
-            const { userId, courseId } = action.payload;
-        
-            if (!state.enrollments.some(enrollment => enrollment.user === userId && enrollment.course === courseId)) {
-                state.enrollments.push({
-                    _id: new Date().getTime().toString(),
-                    user: userId,
-                    course: courseId,
-                });
-                console.log("Enroll course action:", action.payload);
-                console.log("Updated state:", JSON.stringify(state.enrollments, null, 2));
-            }
+            console.log("Enroll course action:", action.payload);
+            // Use the _id from the server response
+            state.enrollments.push({
+                _id: action.payload._id, // Use server-generated ID
+                user: action.payload.userId,
+                course: action.payload.courseId
+            });
+            console.log("Updated state:", state.enrollments);
         },
-        
         unenrollCourse: (state, action) => {
-            const { userId, courseId } = action.payload;
             state.enrollments = state.enrollments.filter(
-                (enrollment) => !(enrollment.user === userId && enrollment.course === courseId)
+                enrollment => 
+                    !(enrollment.user === action.payload.userId && 
+                      enrollment.course === action.payload.courseId)
             );
-            console.log("Unenroll course action:", action.payload);
-            console.log("Updated state:", JSON.stringify(state.enrollments, null, 2));
-        },
+        }
     },
 });
 

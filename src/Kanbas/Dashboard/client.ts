@@ -5,6 +5,7 @@ const USERS_API = `${REMOTE_SERVER}/api/users`;
 
 export const enrollInCourse = async (userId: string, courseId: string) => {
     // Enroll a user in a course
+    console.log("Client sending enrollment request:", { userId, courseId });
     const { data } = await axios.post(`${USERS_API}/${userId}/enrollments`, { courseId });
     return data;
 };

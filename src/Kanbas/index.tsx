@@ -19,6 +19,7 @@ export default function Kanbas() {
     const { currentUser } = useSelector((state: any) => state.accountReducer);
     const dispatch = useDispatch();
     const enrollments = useSelector((state: any) => state.dashboard.enrollments);
+    const [isDataReady, setIsDataReady] = useState(false);
 
     const fetchCourses = async () => {
         try {
@@ -64,29 +65,90 @@ export default function Kanbas() {
         _id: "1234", name: "New Course", number: "New Number",
         startDate: "2023-09-10", endDate: "2023-12-15", image: "/images/reactjs.png", description: "New Description",
     });
+
     const addNewCourse = async () => {
-        const newCourse = await courseClient.createCourse(course);
-        setCourses([...courses, newCourse]);
+        try {
+            // Create the new course
+            const newCourse = await courseClient.createCourse(course);
+            
+            // Update both courses and allCourses lists
+            setCourses(prev => [...prev, newCourse]);
+            setAllCourses(prev => [...prev, newCourse]);
+
+            // If the user is faculty, automatically create enrollment
+            if (currentUser.role === "FACULTY") {
+                const newEnrollment = await EnrollmentClient.enrollInCourse(currentUser._id, newCourse._id);
+                
+                // Update Redux state with new enrollment
+                dispatch(enrollCourse({ 
+                    userId: currentUser._id, 
+                    courseId: newCourse._id 
+                }));
+
+                // Update enrollments list
+                dispatch(setEnrollments([
+                    ...enrollments,
+                    { 
+                        _id: newEnrollment._id, 
+                        user: currentUser._id, 
+                        course: newCourse._id 
+                    }
+                ]));
+            }
+            // Reset the course form
+            setCourse({
+                _id: Date.now().toString(),
+                name: "New Course",
+                number: "New Number",
+                startDate: "2023-09-10",
+                endDate: "2023-12-15",
+                image: "/images/reactjs.png",
+                description: "New Description"
+            });
+
+        } catch (error) {
+            console.error("Error adding new course:", error);
+        }
     };
+
     const deleteCourse = async (courseId: string) => {
-        const status = await courseClient.deleteCourse(courseId);
-        setCourses(courses.filter((course) => course._id !== courseId));
+        try {
+            await courseClient.deleteCourse(courseId);
+            
+            setCourses(prev => prev.filter(course => course._id !== courseId));
+            setAllCourses(prev => prev.filter(course => course._id !== courseId));
+            
+            dispatch(unenrollCourse({ 
+                userId: currentUser._id, 
+                courseId 
+            }));
+            
+            const updatedEnrollments = enrollments.filter(
+                (enrollment: any) => enrollment.course !== courseId
+            );
+            dispatch(setEnrollments(updatedEnrollments));
+        } catch (error) {
+            console.error("Error deleting course:", error);
+        }
     };
+
     const updateCourse = async () => {
-        await courseClient.updateCourse(course);
-        setCourses(
-            courses.map((c) => {
-                if (c._id === course._id) {
-                    return course;
-                } else {
-                    return c;
-                }
-            })
-        );
+        try {
+            await courseClient.updateCourse(course);
+            setCourses(prev => prev.map(c => c._id === course._id ? course : c));
+            setAllCourses(prev => prev.map(c => c._id === course._id ? course : c));
+        } catch (error) {
+            console.error("Error updating course:", error);
+        }
     };
 
     const handleEnrollToggle = async (courseId: string, isEnrolled: boolean) => {
         try {
+            console.log("Attempting to toggle enrollment:", { 
+                userId: currentUser._id, 
+                courseId, 
+                isEnrolled 
+            });
             if (isEnrolled) {
                 await EnrollmentClient.unenrollFromCourse(currentUser._id, courseId);
                 dispatch(unenrollCourse({ userId: currentUser._id, courseId }));
@@ -99,6 +161,7 @@ export default function Kanbas() {
                 setCourses(courses.filter((course) => course._id !== courseId)); // Update local state
             } else {
                 const newEnrollment = await EnrollmentClient.enrollInCourse(currentUser._id, courseId);
+                console.log("Enrollment response:", newEnrollment);
                 dispatch(enrollCourse({ userId: currentUser._id, courseId })); // Update Redux state
     
                 // Update local courses based on enrollments
@@ -113,8 +176,6 @@ export default function Kanbas() {
             console.error("Enrollment error:", error);
         }
     };
-
-    const [isDataReady, setIsDataReady] = useState(false);
 
     useEffect(() => {
         if (currentUser) {
