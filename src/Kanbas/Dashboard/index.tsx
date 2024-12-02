@@ -20,17 +20,19 @@ export default function Dashboard(
     const [showAllCourses, setShowAllCourses] = useState(false);
     const isFaculty = currentUser.role === "FACULTY";
     const isStudent = currentUser.role == "STUDENT";
+    const isAdmin = currentUser.role === "ADMIN";
 
     const handleToggleEnrollments = () => {
         setShowAllCourses(!showAllCourses);
     };
 
-    const visibleCourses = showAllCourses ? allCourses : courses;
+    const visibleCourses = isAdmin ? allCourses :
+        (showAllCourses ? allCourses : courses);
 
     return (
         <div id="wd-dashboard">
             <h1 id="wd-dashboard-title">Dashboard</h1> <hr />
-            {isFaculty ? (
+            {(isFaculty || isAdmin) && (
                 <>
                     <h5>New Course
                         <button
@@ -60,7 +62,9 @@ export default function Dashboard(
                     />
                     <hr />
                 </>
-            ) : (
+            )}
+
+            {isStudent && (
                 <div className="d-flex justify-content-end mb-3">
                     <button className="btn btn-primary" onClick={handleToggleEnrollments}>
                         {showAllCourses ? "Show Enrolled Courses" : "Show All Courses"}
@@ -69,9 +73,11 @@ export default function Dashboard(
             )}
 
             <h2 id="wd-dashboard-published">
-                {showAllCourses ? "All Courses" : "Enrolled Courses"} ({visibleCourses.length})
+                {isAdmin ?
+                    "All Courses" :
+                    (showAllCourses ? "All Courses" : "Enrolled Courses")}
+                ({visibleCourses.length})
             </h2>
-            <hr />
 
             <div id="wd-dashboard-courses" className="row">
                 <div className="row row-cols-1 row-cols-md-5 g-4">
@@ -81,9 +87,9 @@ export default function Dashboard(
                             <div key={course._id} className="wd-dashboard-course col" style={{ width: "300px" }}>
                                 <div className="card rounded-3 overflow-hidden">
                                     <Link to={`/Kanbas/Courses/${course._id}/Home`}
-                                        className="wd-dashboard-course-link text-decoration-none text-dark" 
+                                        className="wd-dashboard-course-link text-decoration-none text-dark"
                                         onClick={() => console.log(`Navigating to course: ${course._id}`)}>
-                                        <img src={course.image} width="100%" height={160} />
+                                        <img src="/images/course_banner.png" width="100%" height={160} />
                                         <div className="card-body">
                                             <h5 className="wd-dashboard-course-title card-title">
                                                 {course.name} </h5>
@@ -101,7 +107,7 @@ export default function Dashboard(
                                                     {isEnrolled ? "Unenroll" : "Enroll"}
                                                 </button>
                                             )}
-                                            {isFaculty && (
+                                            {(isFaculty || isAdmin) && (
                                                 <>
                                                     <button onClick={(event) => {
                                                         event.preventDefault();
@@ -112,7 +118,7 @@ export default function Dashboard(
                                                     </button>
                                                     <button id="wd-edit-course-click"
                                                         onClick={(event) => {
-                                                            event.preventDefault();
+                                                            event.preventDefault(); 
                                                             setCourse(course);
                                                         }}
                                                         className="btn btn-warning me-2 float-end" >
