@@ -132,9 +132,9 @@ export default function Quizzes() {
                         {isClosed(quiz.available_until) ? (
                           <strong>Closed</strong>
                         ) : isAvailable(
-                            quiz.available_from,
-                            quiz.available_until
-                          ) ? (
+                          quiz.available_from,
+                          quiz.available_until
+                        ) ? (
                           <>
                             <strong>Available until</strong>&nbsp;
                             {formatDate(quiz.available_until)}
@@ -149,7 +149,7 @@ export default function Quizzes() {
                           &nbsp;&#124;&nbsp;<strong>Due</strong>&nbsp;
                           {formatDate(quiz.due_date)}
                           &nbsp;&#124;&nbsp;{quiz.points}&nbsp;pts
-                          &nbsp;&#124;&nbsp;{quiz.questions}&nbsp;questions
+                          &nbsp;&#124;&nbsp;{Array.isArray(quiz.questions) ? quiz.questions.length : 0}&nbsp;questions
                           &nbsp;&#124;&nbsp;
                           <ProtectedRoute
                             isDataReady={true}

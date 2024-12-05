@@ -34,7 +34,7 @@ export default function Courses({ courses }: { courses: any[]; }) {
                         <Route path="Assignments" element={<Assignments />} />
                         <Route path="Assignments/:aid" element={<AssignmentEditor />} />
                         <Route path="Quizzes" element={<Quizzes />} />
-                        <Route path ="Quizzes/:aid" element={<QuizEditor />} />
+                        <Route path ="Quizzes/:qid" element={<QuizEditor />} />
                         <Route path="Grades" element={<h2>Grades</h2>} />
                         <Route path="People" element={<PeopleTable />} />
                     </Routes>

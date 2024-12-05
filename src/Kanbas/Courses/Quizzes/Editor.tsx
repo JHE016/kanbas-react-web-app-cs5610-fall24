@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useParams } from "react-router-dom";
 import QuestionEditor from './QuestionEditor';
+import { useDispatch, useSelector } from "react-redux";
+import * as client from "./client";
+import { updateQuiz } from "./reducer";
+import { Question } from './types';
 
 const QuizEditor = () => {
-  const { cid } = useParams();
-  const navigate = useNavigate();
+  const { cid, qid } = useParams();
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("details");
+  const quiz = useSelector((state: any) =>
+    state.quizReducer.quizzes.find((q: any) => q._id === qid)
+  );
+
   const [quizData, setQuizData] = useState({
     title: "Unnamed Quiz",
     description: "",
     quizType: "GRADED_QUIZ",
-    points: 100,
+    points: 0,
     assignmentGroup: "QUIZZES",
     shuffleAnswers: true,
     timeLimit: 20,
@@ -23,23 +31,67 @@ const QuizEditor = () => {
     lockQuestionsAfterAnswering: false,
     dueDate: "",
     availableFrom: "",
-    availableUntil: ""
+    availableUntil: "",
+    questions: [] as Question[]
   });
 
-  const handleInputChange = (field: any, value: any) => {
+  useEffect(() => {
+    const fetchQuizData = async () => {
+      if (qid) {
+        try {
+          const fetchedQuiz = await client.getQuiz(qid);
+          console.log("Fetched Quiz on Load:", fetchedQuiz);
+          setQuizData(fetchedQuiz);
+        } catch (error) {
+          console.error("Error fetching quiz data:", error);
+        }
+      }
+    };
+  
+    fetchQuizData();
+  }, [qid]);
+
+  const handleInputChange = (field: string, value: any) => {
     setQuizData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const handleSave = () => {
-    console.log("Saving quiz:", quizData);
-    navigate(`/Kanbas/Courses/${cid}/Quizzes`);
+  const handleSaveQuestions = async (questions: Question[]) => {
+    try {
+      // Update the local state
+      const updatedQuizData = {
+        ...quizData,
+        questions: questions,
+        points: questions.reduce((sum, q) => sum + q.points, 0)
+      };
+
+      if (qid) {
+        // Save to backend
+        const updatedQuiz = await client.updateQuiz(cid!, qid, updatedQuizData);
+        dispatch(updateQuiz(updatedQuiz));
+        setQuizData(updatedQuiz);
+      }
+    } catch (error) {
+      console.error("Error saving questions:", error);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      if (qid) {
+        const updatedQuiz = await client.updateQuiz(cid!, qid, quizData);
+        dispatch(updateQuiz(updatedQuiz));
+        window.location.hash = `/Kanbas/Courses/${cid}/Quizzes`;
+      }
+    } catch (error) {
+      console.error("Error saving quiz:", error);
+    }
   };
 
   const handleCancel = () => {
-    navigate(`/Kanbas/Courses/${cid}/Quizzes`);
+    window.location.hash = `/Kanbas/Courses/${cid}/Quizzes`;
   };
 
   return (
@@ -230,7 +282,11 @@ const QuizEditor = () => {
       {activeTab === "questions" && (
         <div className="card">
           <div className="card-body">
-            <QuestionEditor />
+            <QuestionEditor
+              quizId={qid!}
+              initialQuestions={quizData.questions || []}
+              onSave={handleSaveQuestions}  // Ensure backend is updated
+            />
           </div>
         </div>
       )}

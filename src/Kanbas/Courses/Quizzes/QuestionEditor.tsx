@@ -1,46 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import * as client from './client';
+import { Question } from './types';
+import { addQuestion, deleteQuestion, updateQuestion } from './reducer';
 
-type Question = {
-  id: string;
-  title: string;
-  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'FILL_BLANK';
-  points: number;
-  question: string;
-  choices?: string[];
-  correctAnswer?: string | boolean;
-  possibleAnswers?: string[];
-};
+interface Props {
+  quizId: string;
+  initialQuestions?: Question[];
+  onSave: (questions: Question[]) => void;
+}
 
-const QuestionEditor = () => {
-  const [questions, setQuestions] = useState<Question[]>([]);
+
+const QuestionEditor: React.FC<Props> = ({ quizId, initialQuestions = [], onSave }) => {
+  const [questions, setQuestions] = useState<Question[]>(initialQuestions);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const dispatch = useDispatch();
+
+  // Update local questions when initialQuestions changes
+  useEffect(() => {
+    setQuestions(initialQuestions);
+  }, [initialQuestions]);
 
   const handleAddQuestion = () => {
     const newQuestion: Question = {
-      id: Date.now().toString(),
       title: 'New Question',
       type: 'MULTIPLE_CHOICE',
-      points: 1,
+      points: 0,
       question: '',
       choices: ['Option 1', 'Option 2'],
       correctAnswer: 'Option 1'
     };
-    setQuestions([...questions, newQuestion]);
+
+    // Set the question in local state for editing
     setEditingQuestion(newQuestion);
   };
+  const handleSaveQuestion = async (question: Question) => {
+    try {
+      let updatedQuiz;
+      if (!question._id) {
+        // For new questions, send to backend
+        updatedQuiz = await client.addQuestionToQuiz(quizId, question);
+      } else {
+        // For existing questions, update in backend
+        updatedQuiz = await client.updateQuizQuestion(quizId, question._id, question);
+      }
 
-  const handleSaveQuestion = (question: Question) => {
-    setQuestions(questions.map(q => q.id === question.id ? question : q));
-    setEditingQuestion(null);
+      // Update local state
+      setQuestions(updatedQuiz.questions);
+      setEditingQuestion(null); // Exit editing mode
+      dispatch(updateQuestion({ quizId, questionId: question._id || '', question }));
+      onSave(updatedQuiz.questions);
+    } catch (error) {
+      console.error("Error saving question:", error);
+    }
   };
 
   const handleEditQuestion = (question: Question) => {
     setEditingQuestion(question);
   };
 
-  const handleDeleteQuestion = (questionId: string) => {
-    setQuestions(questions.filter(q => q.id !== questionId));
+  const handleDeleteQuestion = async (questionId: string) => {
+    if (!quizId || !questionId) {
+      console.error("quizId or questionId is undefined. Cannot delete the question.");
+      return;
+    }
+
+    try {
+      // Make API call to delete the question from the backend
+      const updatedQuiz = await client.deleteQuestionFromQuiz(quizId, questionId);
+
+      // Update local state with the latest questions from the backend
+      setQuestions(updatedQuiz.questions);
+
+      // Notify the parent component of the updated questions
+      onSave(updatedQuiz.questions);
+
+      // Dispatch action to update Redux state
+      dispatch(deleteQuestion({ quizId, questionId }));
+    } catch (error) {
+      console.error("Error deleting question:", error);
+    }
   };
+
 
   return (
     <div className="container mt-4">
@@ -62,15 +103,19 @@ const QuestionEditor = () => {
               <div className="card-header d-flex justify-content-between align-items-center">
                 <h5 className="mb-0">Question {index + 1}</h5>
                 <div>
-                  <button 
+                  <button
                     className="btn btn-sm btn-outline-primary me-2"
                     onClick={() => handleEditQuestion(question)}
                   >
                     Edit
                   </button>
-                  <button 
+                  <button
                     className="btn btn-sm btn-outline-danger"
-                    onClick={() => handleDeleteQuestion(question.id)}
+                    onClick={() => {
+                      if (question._id) {
+                        handleDeleteQuestion(question._id);
+                      }
+                    }}
                   >
                     Delete
                   </button>
@@ -94,9 +139,9 @@ const QuestionEditor = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Edit Question</h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
+                <button
+                  type="button"
+                  className="btn-close"
                   onClick={() => setEditingQuestion(null)}
                 ></button>
               </div>
@@ -136,13 +181,20 @@ const QuestionEditor = () => {
                     <input
                       type="number"
                       className="form-control"
-                      value={editingQuestion.points}
-                      onChange={(e) => setEditingQuestion({
-                        ...editingQuestion,
-                        points: parseInt(e.target.value)
-                      })}
+                      value={editingQuestion?.points?.toString() ?? '0'} // Ensure value is a string
+                      onChange={(e) => {
+                        // Parse input value and default to 0 for invalid or empty input
+                        const value = e.target.value === '' ? 0 : Math.abs(parseInt(e.target.value));
+                        setEditingQuestion({
+                          ...editingQuestion,
+                          points: isNaN(value) ? 0 : value, // Ensure points is a valid number
+                        });
+                      }}
+                      min="0"
+                      step="1"
                     />
                   </div>
+
 
                   <div className="mb-3">
                     <label className="form-label">Question Text</label>
@@ -247,31 +299,69 @@ const QuestionEditor = () => {
 
                   {editingQuestion.type === 'FILL_BLANK' && (
                     <div className="mb-3">
-                      <label className="form-label">Correct Answers (one per line)</label>
-                      <textarea
-                        className="form-control"
-                        rows={4}
-                        value={editingQuestion.possibleAnswers?.join('\n') || ''}
-                        onChange={(e) => setEditingQuestion({
-                          ...editingQuestion,
-                          possibleAnswers: e.target.value.split('\n').filter(answer => answer.trim())
-                        })}
-                        placeholder="Enter possible correct answers, one per line"
-                      />
+                      <label className="form-label">Possible Correct Answers</label> <br/>
+                      {editingQuestion.possibleAnswers?.map((answer, index) => (
+                        <div key={index} className="input-group mb-2">
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={answer}
+                            onChange={(e) => {
+                              const newAnswers = [...(editingQuestion.possibleAnswers || [])];
+                              newAnswers[index] = e.target.value;
+                              setEditingQuestion({
+                                ...editingQuestion,
+                                possibleAnswers: newAnswers,
+                              });
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-outline-danger"
+                            onClick={() => {
+                              const newAnswers = editingQuestion.possibleAnswers?.filter(
+                                (_, i) => i !== index
+                              );
+                              setEditingQuestion({
+                                ...editingQuestion,
+                                possibleAnswers: newAnswers,
+                              });
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary"
+                        onClick={() =>
+                          setEditingQuestion({
+                            ...editingQuestion,
+                            possibleAnswers: [
+                              ...(editingQuestion.possibleAnswers || []),
+                              "",
+                            ],
+                          })
+                        }
+                      >
+                        Add Correct Answer
+                      </button>
                     </div>
                   )}
+
                 </form>
               </div>
               <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
+                <button
+                  type="button"
+                  className="btn btn-secondary"
                   onClick={() => setEditingQuestion(null)}
                 >
                   Cancel
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn btn-primary"
                   onClick={() => handleSaveQuestion(editingQuestion)}
                 >
