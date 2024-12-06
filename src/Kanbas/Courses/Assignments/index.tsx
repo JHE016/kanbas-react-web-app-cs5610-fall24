@@ -10,6 +10,7 @@ import AssignmentControlButtons from "./AssignmentControlButtons";
 import { setAssignment, deleteAssignment } from "./reducer";
 import * as coursesClient from "../client";
 import * as AssignmentClient from "./client";
+import { Link } from "react-router-dom";
 
 export default function Assignments() {
     const { cid } = useParams();
@@ -22,6 +23,7 @@ export default function Assignments() {
 
     const fetchAssignments = async () => {
         const assignments = await coursesClient.findAssignmentsForCourse(cid as string);
+        console.log("Fetched assignments:", assignments); // Add this
         dispatch(setAssignment(assignments));
     };
     
@@ -77,11 +79,11 @@ export default function Assignments() {
                                 <BsGripVertical className="me-3 fs-3" />
                                 <PiNotePencil className="me-3 fs-4 text-success" />
                                 <div>
-                                    <a className="wd-assignment-link"
-                                        href={`#/Kanbas/Courses/${cid}/Assignments/${assignment._id}`}
+                                    <Link className="wd-assignment-link"
+                                        to={`/Kanbas/Courses/${cid}/Assignments/${assignment._id}`}
                                         style={{ color: "black", fontWeight: "bold", textDecoration: "none", fontSize: "20px" }}>
                                         {assignment.title}
-                                    </a>
+                                    </Link>
                                     <div>
                                         <span className="text-danger me-2"> {assignment.modules}</span> |
                                         <span className="text-dark fw-bold me-2"> Not available until</span>

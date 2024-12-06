@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import { useParams, useNavigate } from "react-router";
 import { useDispatch, useSelector } from 'react-redux';
 import { addAssignment, updateAssignment } from "./reducer";
@@ -9,56 +8,109 @@ import * as coursesClient from "../client";
 export default function AssignmentEditor() {
     const { cid, aid } = useParams();
     const dispatch = useDispatch();
-    const navigate = useNavigate()
+    const navigate = useNavigate();
     const assignments = useSelector((state: any) => state.assignments.assignments);
-    const assignment = assignments.find((assignment: any) => assignment._id === aid);
+    const assignment = assignments.find((a: any) => a._id === aid);
     const { currentUser } = useSelector((state: any) => state.accountReducer);
     const isFaculty = currentUser.role === "FACULTY";
 
-    const [title, setTitle] = useState(assignment?.title || "New Assignment");
-    const [description, setDescription] = useState(assignment?.description || "New Assignment Description");
-    const [score, setScore] = useState(assignment?.score?.replace(" pts", "") || 100);
-    const [dueDate, setDueDate] = useState(assignment?.due || "");
-    const [availableFromDate, setAvailableFromDate] = useState(assignment?.notAvailableUntil || "");
-    const [availableUntilDate, setAvailableUntilDate] = useState(assignment?.availableUntil || "");
-    const [modules, setModules] = useState(assignment?.modules || "Multiple Modules");
+    // State management
+    const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
+    const [score, setScore] = useState("100");
+    const [dueDate, setDueDate] = useState("");
+    const [availableFromDate, setAvailableFromDate] = useState("");
+    const [availableUntilDate, setAvailableUntilDate] = useState("");
+    const [modules, setModules] = useState("Multiple Modules");
+    const [onlineOptions, setOnlineOptions] = useState({
+        textEntry: false,
+        websiteURL: false,
+        mediaRecordings: false,
+        studentAnnotation: false,
+        fileUploads: false
+    });
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const formatDate = (date: string | number | Date) => {
-        if (!date) return ""; // Handle null or empty dates
-        const parsedDate = new Date(date);
-        if (isNaN(parsedDate.getTime())) return ""; // Invalid date
-        return parsedDate.toISOString().slice(0, 16); // Format as yyyy-MM-ddThh:mm
-    };
+    // Initialize form with assignment data when available
+    useEffect(() => {
+        if (assignment) { // Debug log
+            console.log("Assignment data:", assignment);
+            setTitle(assignment.title || "");
+            setDescription(assignment.description || "");
+            setScore(assignment.score?.replace(" pts", "") || "100");
 
-    if (!isFaculty) {
-        return null;
-    }
+            // Format dates for datetime-local input
+            if (assignment.due) {
+                const dueDateTime = new Date(assignment.due);
+                setDueDate(dueDateTime.toISOString().slice(0, 16));
+            }
+
+            if (assignment.notAvailableUntil) {
+                const availableFromDateTime = new Date(assignment.notAvailableUntil);
+                setAvailableFromDate(availableFromDateTime.toISOString().slice(0, 16));
+            }
+
+            if (assignment.availableUntil) {
+                const availableUntilDate = new Date(assignment.availableUntil);
+                const formattedDate = availableUntilDate.toISOString().slice(0, 16);
+                console.log("Formatted Available Until:", formattedDate);
+                setAvailableUntilDate(formattedDate);
+            }
+
+            setOnlineOptions({
+                textEntry: assignment.textEntry || false,
+                websiteURL: assignment.websiteURL || false,
+                mediaRecordings: assignment.mediaRecordings || false,
+                studentAnnotation: assignment.studentAnnotation || false,
+                fileUploads: assignment.fileUploads || false
+            });
+
+            setModules(assignment.modules || "Multiple Modules");
+        }
+    }, [assignment]);
 
     const handleSave = async () => {
+        try {
+            setLoading(true);
+            setError("");
 
-        const newAssignment = {
-            _id: aid,
-            title,
-            description,
-            score: `${score} pts`,
-            modules,
-            due: dueDate,
-            notAvailableUntil: availableFromDate,
-            availableUntil: availableUntilDate,
-            course: cid,
-        };
+            const newAssignment = {
+                _id: aid,
+                title,
+                description,
+                score: `${score} pts`,
+                modules,
+                due: dueDate,
+                notAvailableUntil: availableFromDate,
+                availableUntil: availableUntilDate,
+                course: cid,
+                textEntry: onlineOptions.textEntry,
+                websiteURL: onlineOptions.websiteURL,
+                mediaRecordings: onlineOptions.mediaRecordings,
+                studentAnnotation: onlineOptions.studentAnnotation,
+                fileUploads: onlineOptions.fileUploads
+            };
 
-        if (assignment) {
-            // Update existing assignment
-            await AssignmentClient.updateAssignment(newAssignment);
-            console.log("Assignment updated successfully.");
-        } else {
-            // Create a new assignment
-            const createdAssignment = await coursesClient.createAssignmentForCourse(cid, newAssignment);
-            console.log("Assignment created successfully:", createdAssignment);
+            if (assignment) {
+                // Update existing assignment
+                const updatedAssignment = await AssignmentClient.updateAssignment(newAssignment);
+                dispatch(updateAssignment(updatedAssignment)); // Dispatch update to Redux
+                console.log("Assignment updated successfully:", updatedAssignment);
+            } else {
+                // Create a new assignment
+                const createdAssignment = await coursesClient.createAssignmentForCourse(cid, newAssignment);
+                dispatch(addAssignment(createdAssignment)); // Dispatch new assignment to Redux
+                console.log("Assignment created successfully:", createdAssignment);
+            }
+
+            navigate(`/Kanbas/Courses/${cid}/Assignments`);
+        } catch (err) {
+            console.error("Error saving assignment:", err);
+            setError("Failed to save assignment. Please try again.");
+        } finally {
+            setLoading(false);
         }
-    
-        navigate(`/Kanbas/Courses/${cid}/Assignments`);
     };
 
     const handleCancel = () => {
@@ -74,6 +126,7 @@ export default function AssignmentEditor() {
                         type="text"
                         className="form-control"
                         id="wd-name"
+                        placeholder='New Assignment'
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                     />
@@ -84,6 +137,7 @@ export default function AssignmentEditor() {
                         className="form-control"
                         id="wd-description"
                         rows={4}
+                        placeholder='Assignment Description'
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                     />
@@ -146,32 +200,77 @@ export default function AssignmentEditor() {
                             <div className="font fw-bold">Online Entry Options</div>
                             <div className='p-2'>
                                 <div className="form-check">
-                                    <input className="form-check-input" type="checkbox" id="wd-text-entry" />
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="wd-text-entry"
+                                        checked={onlineOptions.textEntry}
+                                        onChange={(e) => setOnlineOptions({
+                                            ...onlineOptions,
+                                            textEntry: e.target.checked
+                                        })}
+                                    />
                                     <label className="form-check-label" htmlFor="wd-text-entry">
                                         Text Entry
                                     </label>
                                 </div>
                                 <div className="form-check">
-                                    <input className="form-check-input" type="checkbox" id="wd-website-url" />
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="wd-website-url"
+                                        checked={onlineOptions.websiteURL}  // Changed from textEntry
+                                        onChange={(e) => setOnlineOptions({
+                                            ...onlineOptions,
+                                            websiteURL: e.target.checked
+                                        })}
+                                    />
                                     <label className="form-check-label" htmlFor="wd-website-url">
                                         Website URL
                                     </label>
                                 </div>
                                 <div className="form-check">
-                                    <input className="form-check-input" type="checkbox" id="wd-media-recordings" />
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="wd-media-recordings"
+                                        checked={onlineOptions.mediaRecordings}  // Changed from textEntry
+                                        onChange={(e) => setOnlineOptions({
+                                            ...onlineOptions,
+                                            mediaRecordings: e.target.checked
+                                        })}
+                                    />
                                     <label className="form-check-label" htmlFor="wd-media-recordings">
                                         Media Recordings
                                     </label>
                                 </div>
                                 <div className="form-check">
-                                    <input className="form-check-input" type="checkbox" id="wd-student-annotation" />
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="wd-student-annotation"
+                                        checked={onlineOptions.studentAnnotation}  // Changed from textEntry
+                                        onChange={(e) => setOnlineOptions({
+                                            ...onlineOptions,
+                                            studentAnnotation: e.target.checked
+                                        })}
+                                    />
                                     <label className="form-check-label" htmlFor="wd-student-annotation">
                                         Student Annotation
                                     </label>
                                 </div>
                                 <div className="form-check">
-                                    <input className="form-check-input" type="checkbox" id="wd-file-upload" />
-                                    <label className="form-check-label" htmlFor="wd-file-upload">
+                                    <input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="wd-file-uploads"
+                                        checked={onlineOptions.fileUploads}  // Changed from textEntry
+                                        onChange={(e) => setOnlineOptions({
+                                            ...onlineOptions,
+                                            fileUploads: e.target.checked
+                                        })}
+                                    />
+                                    <label className="form-check-label" htmlFor="wd-file-uploads">
                                         File Uploads
                                     </label>
                                 </div>
